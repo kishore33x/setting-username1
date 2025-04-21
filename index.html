@@ -12,23 +12,32 @@
         justify-content: center;
         height: 100vh;
         background-color: #fffaff;
+        margin: 0;
+        font-family: sans-serif;
       }
-      /* wrapper */
+
       #wrapper {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         border: 3px solid #0a2463;
-        padding: 16px;
+        padding: 24px;
+        border-radius: 12px;
+        background-color: #f2f2f2;
       }
-      /* sha256-hash */
+
       #sha256-hash {
-        background-color: #2C76A7;
+        background-color: #2c76a7;
         padding: 16px;
         border-radius: 8px;
         color: #fffaff;
+        width: 300px;
+        text-align: center;
+        margin-bottom: 16px;
+        word-wrap: break-word;
       }
+
       #sha256-hash::before {
         content: 'SHA256 Hash';
         font-weight: bold;
@@ -36,42 +45,43 @@
         margin-bottom: 8px;
       }
 
-      /* user-input */
       #user-input {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        margin-top: 16px;
+        gap: 12px;
+        margin-bottom: 16px;
       }
 
       #user-input input {
         padding: 8px;
-        border-radius: none;
-        border: 3px solid #0a2463;
-        margin-right: 8px;
-      }
-
-      #user-input input:focus {
-        outline: none;
+        border: 2px solid #0a2463;
+        border-radius: 6px;
+        width: 200px;
       }
 
       #user-input button {
-        padding: 8px;
-        border-radius: none;
-        border: 3px solid #0a2463;
-        background-color: #2C76A7;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        background-color: #2c76a7;
         color: #fffaff;
         font-weight: bold;
+        cursor: pointer;
       }
 
-      /* result div */
+      #user-input button:hover {
+        background-color: #20567e;
+      }
+
       #result {
-        margin-top: 16px;
+        margin-top: 8px;
         background-color: #3e92cc;
-        padding: 8px;
-        border-radius: none;
+        padding: 8px 16px;
+        border-radius: 6px;
         color: #fffaff;
+        min-width: 200px;
+        text-align: center;
       }
 
       .hidden {
@@ -83,7 +93,8 @@
     <div id="wrapper">
       <span id="sha256-hash"></span>
       <div id="user-input">
-        <input type="text" id="pin" />
+        <input type="text" id="username" placeholder="Enter your username" />
+        <input type="text" id="pin" placeholder="Enter 3-digit pin" />
         <button id="check">Check</button>
       </div>
       <div id="result" class="hidden"></div>

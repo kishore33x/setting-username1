@@ -1,94 +1,111 @@
 const MIN = 100;
 const MAX = 999;
 const pinInput = document.getElementById('pin');
+const usernameInput = document.getElementById('username');
 const sha256HashView = document.getElementById('sha256-hash');
 const resultView = document.getElementById('result');
 
-// a function to store in the local storage
+// Local storage functions
 function store(key, value) {
   localStorage.setItem(key, value);
 }
-
-// a function to retrieve from the local storage
 function retrieve(key) {
   return localStorage.getItem(key);
 }
-
-function getRandomArbitrary(min, max) {
-  let cached;
-  cached = Math.random() * (max - min) + min;
-  cached = Math.floor(cached);
-  return cached;
-}
-
-// a function to clear the local storage
 function clear() {
   localStorage.clear();
 }
 
-// a function to generate sha256 hash of the given string
-async function sha256(message) {
-  // encode as UTF-8
-  const msgBuffer = new TextEncoder().encode(message);
-
-  // hash the message
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-
-  // convert ArrayBuffer to Array
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-  // convert bytes to hex string
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-  return hashHex;
+// Cookie functions
+function setCookie(name, value, days = 7) {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  const expires = 'expires=' + d.toUTCString();
+  document.cookie = `${name}=${value};${expires};path=/`;
+}
+function getCookie(name) {
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [key, val] = cookie.trim().split('=');
+    if (key === name) return val;
+  }
+  return null;
 }
 
+// Generate a random integer between min and max
+function getRandomArbitrary(min, max) {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+// SHA256 hash function
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Get or generate SHA256 hash
 async function getSHA256Hash() {
   let cached = retrieve('sha256');
-  if (cached) {
-    return cached;
-  }
+  if (cached) return cached;
 
-  cached = await sha256(getRandomArbitrary(MIN, MAX));
+  const randomPin = getRandomArbitrary(MIN, MAX).toString();
+  cached = await sha256(randomPin);
   store('sha256', cached);
   return cached;
 }
 
+// Main logic to compare input
+async function test() {
+  const pin = pinInput.value;
+  const username = usernameInput.value.trim();
+
+  if (!username) {
+    resultView.innerHTML = '⚠️ Please enter a username';
+    resultView.classList.remove('hidden');
+    return;
+  }
+
+  setCookie('username', username);
+
+  if (pin.length !== 3) {
+    resultView.innerHTML = '💡 Not 3 digits';
+    resultView.classList.remove('hidden');
+    return;
+  }
+
+  const hashedPin = await sha256(pin);
+
+  if (hashedPin === sha256HashView.innerHTML) {
+    resultView.innerHTML = `🎉 Success, ${username}!`;
+  } else {
+    resultView.innerHTML = `❌ Failed, ${username}`;
+  }
+
+  resultView.classList.remove('hidden');
+}
+
+// Load hash and greet user
 async function main() {
+  const savedUsername = getCookie('username');
+  if (savedUsername) {
+    resultView.innerHTML = `👋 Welcome back, ${savedUsername}!`;
+    resultView.classList.remove('hidden');
+  }
+
   sha256HashView.innerHTML = 'Calculating...';
   const hash = await getSHA256Hash();
   sha256HashView.innerHTML = hash;
 }
 
-async function test() {
-  const pin = pinInput.value;
-
-  if (pin.length !== 3) {
-    resultView.innerHTML = '💡 not 3 digits';
-    resultView.classList.remove('hidden');
-    return;
-  }
-
-  const sha256HashView = document.getElementById('sha256-hash');
-  const hasedPin = await sha256(pin);
-
-  if (hasedPin === sha256HashView.innerHTML) {
-    resultView.innerHTML = '🎉 success';
-    resultView.classList.add('success');
-  } else {
-    resultView.innerHTML = '❌ failed';
-  }
-  resultView.classList.remove('hidden');
-}
-
-// ensure pinInput only accepts numbers and is 3 digits long
+// Ensure only numeric and 3 digits for PIN
 pinInput.addEventListener('input', (e) => {
-  const { value } = e.target;
-  pinInput.value = value.replace(/\D/g, '').slice(0, 3);
+  pinInput.value = e.target.value.replace(/\D/g, '').slice(0, 3);
 });
 
-// attach the test function to the button
+// Attach click handler
 document.getElementById('check').addEventListener('click', test);
 
+// Run app
 main();
